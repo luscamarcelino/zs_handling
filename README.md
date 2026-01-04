@@ -13,7 +13,8 @@ Um editor de handling **em tempo real** avançado para servidores FiveM baseados
 **ESTE PROJETO É DE CÓDIGO ABERTO (OPEN SOURCE) E TOTALMENTE GRATUITO.**
 
 **É ESTRITAMENTE PROIBIDA A VENDA DESTE SCRIPT.**
-Você é livre para usar, modificar e compartilhar com a comunidade, desde que mantenha os créditos e a gratuidade. Não pague por este recurso. Se você comprou este script, você foi enganado.
+Você é livre para usar, modificar e compartilhar com a comunidade, desde que mantenha os créditos e a gratuidade. 
+Não pague por este recurso. Se você comprou este script, você foi enganado.
 ---
 
 ## ✨ Funcionalidades
@@ -52,6 +53,6 @@ Você é livre para usar, modificar e compartilhar com a comunidade, desde que m
 ## 🤝 Contribuição
 
 Sinta-se à vontade para abrir Issues ou Pull Requests para melhorar o código. A comunidade agradece!
-Discord: @zeusong
+*Discord: @zeusong
 ---
 *Desenvolvido seguindo os padrões do MRI QBOX.*
