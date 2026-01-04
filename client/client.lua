@@ -4,6 +4,14 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local OriginalHandling = {}
 local EditedVehicles = {}
 
+local integerFields = {
+    nInitialDriveGears = true,
+    nMonetaryValue = true,
+    strModelFlags = true,
+    strHandlingFlags = true,
+    strDamageFlags = true
+}
+
 local handlingFloats = {
     "fMass", "fInitialDragCoeff", "fPercentSubmerged", "fDriveBiasFront", "nInitialDriveGears",
     "fInitialDriveForce", "fDriveInertia", "fClutchChangeTimeScalePoint", "fDrivePointMaxAnglePoint",
@@ -17,14 +25,17 @@ local handlingFloats = {
 }
 
 local function ForceVehicleUpdate(vehicle)
-    local isEngineOn = GetIsVehicleEngineRunning(vehicle)
-    SetVehicleEngineOn(vehicle, not isEngineOn, true, true)
-    SetVehicleEngineOn(vehicle, isEngineOn, true, true)
+    local currentTrans = GetVehicleMod(vehicle, 13)
+    SetVehicleMod(vehicle, 13, -1, false)
+    SetVehicleMod(vehicle, 13, currentTrans, false)
+
+    local currentEngine = GetVehicleMod(vehicle, 11)
+    SetVehicleMod(vehicle, 11, -1, false)
+    SetVehicleMod(vehicle, 11, currentEngine, false)
+    
     SetVehicleDirtLevel(vehicle, 0.0)
     
-    -- Empurrãozinho se estiver parado
-    local vel = GetEntityVelocity(vehicle)
-    if #vel < 0.1 then
+    if GetEntitySpeed(vehicle) < 0.1 then
         ApplyForceToEntity(vehicle, 1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
     end
 end
@@ -41,7 +52,11 @@ RegisterCommand('handling', function()
         if not OriginalHandling[plate] then
             local original = {}
             for _, field in ipairs(handlingFloats) do
-                original[field] = GetVehicleHandlingFloat(vehicle, "CHandlingData", field)
+                if integerFields[field] then
+                    original[field] = GetVehicleHandlingInt(vehicle, "CHandlingData", field)
+                else
+                    original[field] = GetVehicleHandlingFloat(vehicle, "CHandlingData", field)
+                end
             end
             OriginalHandling[plate] = original
         end
@@ -76,16 +91,23 @@ RegisterNUICallback('applyChanges', function(data, cb)
 
     if vehicle and vehicle ~= 0 then
         local plate = GetVehicleNumberPlateText(vehicle)
+        
         for field, value in pairs(newData) do
             local val = tonumber(value)
             if val then
-                SetVehicleHandlingFloat(vehicle, "CHandlingData", field, val)
+                if integerFields[field] then
+                    SetVehicleHandlingInt(vehicle, "CHandlingData", field, math.floor(val))
+                else
+                    SetVehicleHandlingFloat(vehicle, "CHandlingData", field, val + 0.0)
+                end
             end
         end
+        
         EditedVehicles[plate] = newData
-        ForceVehicleUpdate(vehicle)
+        ForceVehicleUpdate(vehicle) 
+        
         SetNuiFocus(false, false)
-        QBCore.Functions.Notify("Handling aplicado! Teste o veículo.", "success")
+        QBCore.Functions.Notify("Handling aplicado com sucesso!", "success")
     end
     cb('ok')
 end)
@@ -93,22 +115,32 @@ end)
 RegisterNUICallback('resetHandling', function(data, cb)
     local ped = PlayerPedId()
     local vehicle = GetVehiclePedIsIn(ped, false)
+    
     if vehicle and vehicle ~= 0 then
         local plate = GetVehicleNumberPlateText(vehicle)
+        
         if OriginalHandling[plate] then
             for field, value in pairs(OriginalHandling[plate]) do
-                SetVehicleHandlingFloat(vehicle, "CHandlingData", field, value)
+                if integerFields[field] then
+                    SetVehicleHandlingInt(vehicle, "CHandlingData", field, math.floor(value))
+                else
+                    SetVehicleHandlingFloat(vehicle, "CHandlingData", field, value + 0.0)
+                end
             end
+            
             EditedVehicles[plate] = nil
             ForceVehicleUpdate(vehicle)
+            
             SetNuiFocus(false, false)
-            QBCore.Functions.Notify("Valores padrão restaurados!", "primary")
+            QBCore.Functions.Notify("Valores originais restaurados!", "primary")
+        else
+            QBCore.Functions.Notify("Original não encontrado.", "error")
         end
     end
     cb('ok')
 end)
 
--- Coleta TUDO para Exportação XML
+-- Exportação XML Completa
 RegisterNUICallback('exportHandling', function(data, cb)
     local ped = PlayerPedId()
     local vehicle = GetVehiclePedIsIn(ped, false)
@@ -134,6 +166,7 @@ RegisterNUICallback('exportHandling', function(data, cb)
             "fDeformationDamageMult", "fEngineDamageMult", "fPetrolTankVolume", "fOilVolume", 
             "fSeatOffsetDistX", "fSeatOffsetDistY", "fSeatOffsetDistZ"
         }
+        
         for _, field in ipairs(allFloats) do
             exportData[field] = GetVehicleHandlingFloat(vehicle, "CHandlingData", field)
         end
@@ -155,7 +188,8 @@ RegisterNUICallback('exportHandling', function(data, cb)
         exportData["strDamageFlags"] = GetVehicleHandlingInt(vehicle, "CHandlingData", "strDamageFlags")
 
         TriggerServerEvent('zs_handlingeditor:server:saveHandling', modelName, plate, exportData)
-        QBCore.Functions.Notify("Handling XML exportado para a pasta output!", "success")
+        
+        QBCore.Functions.Notify("XML Exportado com sucesso!", "success")
     end
     cb('ok')
 end)

@@ -5,18 +5,17 @@ const tabs = document.querySelectorAll('.tab-btn');
 
 let currentHandlingData = {};
 let originalHandlingData = {};
-let currentTab = 'motor'; // Aba padrão
+let currentTab = 'motor';
 
 const categories = {
     motor: [
         "fInitialDriveForce", "fDriveInertia", "nInitialDriveGears", "fClutchChangeTimeScalePoint", 
-        "fInitialDragCoeff", "fDriveBiasFront", "fDrivePointMaxAnglePoint"
+        "fInitialDragCoeff", "fDriveBiasFront", "fDrivePointMaxAnglePoint", "fInitialDriveMaxFlatVel"
     ],
     tracao: [
-        "fBrakeForce", "fBrakeBiasFront", "fSteeringLock",
-        "fTractionCurveMax", "fTractionCurveMin", "fTractionCurveLateral", 
-        "fTractionSpringDeltaMax", "fLowSpeedTractionLossMult", 
-        "fTractionBiasFront", "fTractionLossMult", "fCamberStiffnesss"
+        "fBrakeForce", "fBrakeBiasFront", "fSteeringLock", "fTractionCurveMax", 
+        "fTractionCurveMin", "fTractionCurveLateral", "fTractionSpringDeltaMax", 
+        "fLowSpeedTractionLossMult", "fTractionBiasFront", "fTractionLossMult", "fCamberStiffnesss"
     ],
     suspensao: [
         "fSuspensionForce", "fSuspensionCompDamp", "fSuspensionReboundDamp", 
@@ -31,7 +30,6 @@ const categories = {
 };
 
 const handlingDescriptions = {
-    // --- MOTOR & TRANSMISSÃO ---
     fInitialDriveForce: "Potência do motor (Torque). Aumente para arrancar mais rápido (0.1 a 0.5 geralmente).",
     fDriveInertia: "Inércia do motor. Valores MENORES fazem o giro subir mais rápido (motor mais esperto).",
     nInitialDriveGears: "Número total de marchas do veículo (Ex: 5 ou 6).",
@@ -93,28 +91,19 @@ window.addEventListener('message', function(event) {
     if (event.data.type === "open") {
         currentHandlingData = event.data.data;
         originalHandlingData = event.data.original || {};
-        
         buildForm(currentHandlingData, originalHandlingData);
         app.style.display = 'flex';
-        
-        if (!app.style.top) {
-            app.style.top = '10%';
-            app.style.left = '10%';
-        }
+        if (!app.style.top) { app.style.top = '10%'; app.style.left = '10%'; }
     }
 });
 
 function buildForm(data, originalData) {
-    container.innerHTML = ''; 
-    
-    const fieldsToShow = categories[currentTab] || [];
+    container.innerHTML = '';
+    const fields = categories[currentTab] || [];
 
-    fieldsToShow.forEach(key => {
+    fields.forEach(key => {
         if (data[key] === undefined) return;
-
-        const value = data[key];
-        const originalValue = originalData[key];
-
+        
         const div = document.createElement('div');
         div.className = 'input-group';
         
@@ -123,37 +112,43 @@ function buildForm(data, originalData) {
 
         const label = document.createElement('label');
         label.innerText = key;
-        
+
         const origLabel = document.createElement('span');
         origLabel.className = 'original-val';
-        if (originalValue !== undefined) {
-            origLabel.innerText = `(Orig: ${originalValue.toFixed(4)})`;
-            // Muda cor se estiver alterado p identidicar
-            if (value !== originalValue) {
-                origLabel.style.color = '#e74c3c'; // Vermelho se mudou
-            }
+        if (originalData[key] !== undefined) {
+            // Mostra original com 6 casas decimais para comparação precisa
+            origLabel.innerText = `(Orig: ${Number(originalData[key]).toFixed(6)})`;
+            if (data[key] !== originalData[key]) origLabel.style.color = '#e74c3c';
         }
 
         const icon = document.createElement('div');
         icon.className = 'info-icon';
         icon.innerText = 'i';
-
+        
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip-text';
         tooltip.innerText = handlingDescriptions[key] || "Sem descrição.";
 
-        labelArea.appendChild(label);
-        labelArea.appendChild(origLabel);
-        labelArea.appendChild(icon);
-        labelArea.appendChild(tooltip);
+        labelArea.append(label, origLabel, icon, tooltip);
 
         const input = document.createElement('input');
         input.type = 'number';
-        input.step = '0.01';
-        input.value = value.toFixed(4);
+        
+        // AQUI ESTÁ A MÁGICA DA PRECISÃO
+        input.step = '0.000001'; // Permite micro ajustes
+        
+        // Tratamento especial para inteiros (Marchas) vs Floats
+        if (key === 'nInitialDriveGears' || key.startsWith('n')) {
+             input.step = '1';
+             input.value = data[key];
+        } else {
+             input.value = data[key].toFixed(6); // Mostra 6 casas
+        }
         
         input.addEventListener('change', (e) => {
             currentHandlingData[key] = parseFloat(e.target.value);
+            
+            // Verifica diferença com precisão
             if (currentHandlingData[key] !== originalData[key]) {
                 origLabel.style.color = '#e74c3c';
             } else {
@@ -161,64 +156,40 @@ function buildForm(data, originalData) {
             }
         });
 
-        div.appendChild(labelArea);
-        div.appendChild(input);
-        container.appendChild(div);
+        div.append(labelArea, input);
+        container.append(div);
     });
 }
 
-document.getElementById('applyBtn').addEventListener('click', () => {
+document.getElementById('applyBtn').onclick = () => {
     fetch(`https://${GetParentResourceName()}/applyChanges`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        method: 'POST', headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: JSON.stringify({ handlingData: currentHandlingData })
     });
     app.style.display = 'none';
-});
-
-document.getElementById('resetBtn').addEventListener('click', () => {
-    fetch(`https://${GetParentResourceName()}/resetHandling`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: JSON.stringify({})
-    });
+};
+document.getElementById('resetBtn').onclick = () => {
+    fetch(`https://${GetParentResourceName()}/resetHandling`, { method: 'POST' });
     app.style.display = 'none';
-});
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-    fetch(`https://${GetParentResourceName()}/exportHandling`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: JSON.stringify({ handlingData: currentHandlingData })
-    });
-});
-
-document.getElementById('closeBtn').addEventListener('click', closeUI);
-function closeUI() {
+};
+document.getElementById('exportBtn').onclick = () => {
+    fetch(`https://${GetParentResourceName()}/exportHandling`, { method: 'POST' });
+};
+document.getElementById('closeBtn').onclick = () => {
+    fetch(`https://${GetParentResourceName()}/close`, { method: 'POST' });
     app.style.display = 'none';
-    fetch(`https://${GetParentResourceName()}/close`, {method: 'POST', body: JSON.stringify({})});
-}
-document.onkeyup = function (data) { if (data.which == 27) closeUI(); };
+};
+document.onkeyup = (e) => { if (e.which == 27) document.getElementById('closeBtn').click(); };
 
-let isDragging = false;
-let startX, startY, initialLeft, initialTop;
-header.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    const rect = app.getBoundingClientRect();
-    initialLeft = rect.left;
-    initialTop = rect.top;
+let isDragging = false, startX, startY, initLeft, initTop;
+header.onmousedown = (e) => {
+    isDragging = true; startX = e.clientX; startY = e.clientY;
+    const rect = app.getBoundingClientRect(); initLeft = rect.left; initTop = rect.top;
     header.style.cursor = 'grabbing';
-});
-document.addEventListener('mousemove', (e) => {
+};
+document.onmousemove = (e) => {
     if (!isDragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    app.style.left = `${initialLeft + dx}px`;
-    app.style.top = `${initialTop + dy}px`;
-});
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-    header.style.cursor = 'grab';
-});
+    app.style.left = `${initLeft + e.clientX - startX}px`;
+    app.style.top = `${initTop + e.clientY - startY}px`;
+};
+document.onmouseup = () => { isDragging = false; header.style.cursor = 'grab'; };
