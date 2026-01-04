@@ -1,0 +1,261 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    user-select: none; /* Impede seleção de texto ao arrastar */
+}
+
+.container {
+    width: 460px; /* Aumentado para caber as abas e textos */
+    height: 650px;
+    background-color: #1e1e1e;
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    overflow: hidden;
+    position: absolute; /* Necessário para mover a janela */
+}
+
+/* --- HEADER (Área de arrastar) --- */
+.header {
+    padding: 15px;
+    background-color: #2d2d2d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #00a8ff;
+    cursor: grab;
+}
+
+.header:active {
+    cursor: grabbing;
+}
+
+.header h1 {
+    font-size: 18px;
+    margin: 0;
+    pointer-events: none;
+}
+
+#closeBtn {
+    background: none;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* --- ABAS (Categorias) --- */
+.tabs {
+    display: flex;
+    background-color: #252525;
+    border-bottom: 1px solid #444;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #888;
+    padding: 12px 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.tab-btn:hover {
+    color: white;
+    background-color: #333;
+}
+
+.tab-btn.active {
+    color: #00a8ff;
+    border-bottom: 3px solid #00a8ff;
+    background-color: #2d2d2d;
+}
+
+/* --- CONTEÚDO --- */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+/* Scrollbar personalizada */
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+.content::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+.content::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.input-group {
+    margin-bottom: 12px;
+    position: relative;
+}
+
+/* Área do título do input + valor original + ícone */
+.label-area {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.label-area label {
+    font-size: 13px;
+    color: #ddd;
+    font-weight: bold;
+    margin-right: auto; /* Empurra o resto para a direita */
+}
+
+/* Estilo do texto (Orig: 0.00) */
+.original-val {
+    font-size: 11px;
+    color: #777;
+    margin-right: 8px;
+    font-family: monospace;
+}
+
+/* Ícone de Informação [i] */
+.info-icon {
+    font-size: 11px;
+    background-color: #444;
+    color: #00a8ff;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: help;
+    font-family: serif;
+    font-weight: bold;
+}
+
+/* Tooltip (Balão de ajuda) */
+.tooltip-text {
+    visibility: hidden;
+    width: 220px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 120%;
+    right: 0; /* Alinha à direita do ícone */
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 11px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border: 1px solid #00a8ff;
+    pointer-events: none;
+    line-height: 1.4;
+}
+
+.info-icon:hover + .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Inputs numéricos */
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    background-color: #252525;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: monospace; /* Ajuda a alinhar números */
+}
+
+.input-group input:focus {
+    border-color: #00a8ff;
+    outline: none;
+    background-color: #2d2d2d;
+}
+
+/* --- RODAPÉ E BOTÕES --- */
+.footer {
+    padding: 15px;
+    background-color: #2d2d2d;
+    text-align: center;
+    border-top: 1px solid #444;
+}
+
+/* Botão Aplicar (Verde) - Ocupa linha inteira */
+.btn-apply {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    font-size: 14px;
+    text-transform: uppercase;
+    transition: background 0.2s;
+    margin-bottom: 10px;
+}
+
+.btn-apply:hover {
+    background-color: #2ecc71;
+}
+
+/* Container para botões lado a lado */
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Botão Resetar (Vermelho) */
+.btn-reset {
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1; /* Ocupa 50% */
+    transition: background 0.2s;
+}
+
+.btn-reset:hover {
+    background-color: #e74c3c;
+}
+
+/* Botão Exportar (Azul) */
+.btn-save {
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1; /* Ocupa 50% */
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #3498db;
+}
