@@ -116,7 +116,6 @@ function buildForm(data, originalData) {
         const origLabel = document.createElement('span');
         origLabel.className = 'original-val';
         if (originalData[key] !== undefined) {
-            // Mostra original com 6 casas decimais para comparação precisa
             origLabel.innerText = `(Orig: ${Number(originalData[key]).toFixed(6)})`;
             if (data[key] !== originalData[key]) origLabel.style.color = '#e74c3c';
         }
@@ -134,15 +133,13 @@ function buildForm(data, originalData) {
         const input = document.createElement('input');
         input.type = 'number';
         
-        // AQUI ESTÁ A MÁGICA DA PRECISÃO
-        input.step = '0.000001'; // Permite micro ajustes
+        input.step = '0.000001'; 
         
-        // Tratamento especial para inteiros (Marchas) vs Floats
         if (key === 'nInitialDriveGears' || key.startsWith('n')) {
              input.step = '1';
              input.value = data[key];
         } else {
-             input.value = data[key].toFixed(6); // Mostra 6 casas
+             input.value = data[key].toFixed(6);
         }
         
         input.addEventListener('change', (e) => {
